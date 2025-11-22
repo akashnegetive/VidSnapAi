@@ -23,6 +23,13 @@ FFmpeg creates a reel by stitching images + voice
 
 Output is saved and shown in the gallery
 
+## Demo Video
+
+
+https://github.com/user-attachments/assets/bf1741c8-8f4a-4167-a095-22ee754003b2
+
+
+
 
 ## Demo
 
