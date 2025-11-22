@@ -31,17 +31,17 @@ https://github.com/user-attachments/assets/bf1741c8-8f4a-4167-a095-22ee754003b2
 
 
 
-## Demo
+## Demo Page
 
 * Main Page
   
   <img src="demo/Home.png" alt="workflow" width="70%">
   
-* Create Reels Page (Add Photo & Audio)
+* Create Reels Page - Add Photo & Audio
  
   <img src="demo/Create Reel.png" alt="workflow" width="70%">
 
-* Gallery Page (Contains Created Reels)
+* Gallery Page - Contains Created Reels
   
 <img src="demo/Gallery.png" alt="workflow" width="70%">
 
