@@ -35,7 +35,7 @@ https://github.com/user-attachments/assets/bf1741c8-8f4a-4167-a095-22ee754003b2
 
 
 
-## Website Link   [🔗](https://vidsnapai-akash.onrender.com/gallery)
+## Website Link   [🔗](https://vidsnapai-akash.onrender.com/)
 
 * Main Page
   
