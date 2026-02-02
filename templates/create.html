@@ -12,6 +12,22 @@
         <div class="upload-container">
             <h1 class="upload-title">Create Your Reel</h1>
             <p class="upload-instructions">Upload your video files to create an amazing reel. You can upload multiple files.</p>
+
+            {% if created %}
+            <div class="success-banner">
+                ✅ Reel request submitted — processing started. Check Gallery shortly.
+            </div>
+            {% endif %}
+
+            {% if created %}
+            <script>
+            setTimeout(() => {
+                window.location.href = "/gallery";
+            }, 4000);
+            </script>
+            {% endif %}
+
+
             
             <form action="/create" enctype="multipart/form-data"  method="post" class="dropzone" id="myDropzone">
                 <div class="fallback">
