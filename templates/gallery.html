@@ -8,11 +8,33 @@
 
 {% block content %}
 <div class="container gallery-container">
+
     <h1 class="gallery-title">Reel Gallery</h1>
+
+    {% if reels|length == 0 %}
+        <div class="empty-state">
+            🎬 No reels yet — create one to see it here.
+        </div>
+    {% endif %}
+
     <div class="gallery-grid">
         {% for reel in reels %}
-          <video src="/static/reels/{{reel}}" controls></video>
-        {% endfor %} 
+            <video src="/static/reels/{{ reel }}" controls preload="metadata"></video>
+        {% endfor %}
     </div>
+
 </div>
-{% endblock %} 
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+/* Smart auto-refresh — only if reels list is empty */
+const videos = document.querySelectorAll("video");
+
+if (videos.length === 0) {
+    console.log("No reels yet — auto refreshing...");
+    setTimeout(() => location.reload(), 4000);
+}
+</script>
+{% endblock %}
