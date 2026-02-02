@@ -1,31 +1,58 @@
 import os
 import time
 import subprocess
+from PIL import Image
 from text_to_audio import text_to_speech_file
 
+
+# -----------------------------
+# IMAGE NORMALIZATION FIX
+# -----------------------------
+def normalize_images(folder):
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(base_dir, "user_uploads", folder)
+
+    for name in os.listdir(path):
+        if name.lower().endswith((".jpg", ".jpeg", ".png")):
+            full = os.path.join(path, name)
+            try:
+                img = Image.open(full).convert("RGB")
+                img.save(full, "JPEG")
+                print(f"[IMG] normalized {name}")
+            except Exception as e:
+                print(f"[IMG] skip bad image {name}: {e}")
+
+
+# -----------------------------
+# TEXT → AUDIO
+# -----------------------------
 def text_to_audio(folder):
-    """Reads desc.txt and generates an audio.mp3 in the same folder."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
     desc_path = os.path.join(base_dir, "user_uploads", folder, "desc.txt")
 
     print(f"[PROCESS] Reading description from: {desc_path}")
+
     if not os.path.exists(desc_path):
-        print(f"[ERROR] desc.txt not found for {folder}")
-        return
+        print(f"[ERROR] desc.txt not found")
+        return False
 
     with open(desc_path, "r", encoding="utf-8") as f:
         text = f.read().strip()
 
     if not text:
-        print(f"[WARNING] Empty desc.txt for {folder}, skipping TTS.")
-        return
+        print("[WARNING] Empty desc.txt")
+        return False
 
     text_to_speech_file(text, folder)
+    return True
 
 
+# -----------------------------
+# REEL CREATION
+# -----------------------------
 def create_reel(folder):
-    """Combines images/videos and audio.mp3 into a single output reel using ffmpeg."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
+
     input_txt = os.path.join(base_dir, "user_uploads", folder, "input.txt")
     audio_path = os.path.join(base_dir, "user_uploads", folder, "audio.mp3")
     output_path = os.path.join(base_dir, "static", "reels", f"{folder}.mp4")
@@ -33,46 +60,69 @@ def create_reel(folder):
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     if not os.path.exists(audio_path):
-        print(f"[ERROR] audio.mp3 not found for {folder}. Skipping reel creation.")
+        print("[ERROR] audio.mp3 missing — skip reel")
         return
 
-    command = (
-        f'ffmpeg -f concat -safe 0 -i "{input_txt}" -i "{audio_path}" '
-        f'-vf "scale=1080:1920:force_original_aspect_ratio=decrease,'
-        f'pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black" '
-        f'-c:v libx264 -c:a aac -shortest -r 30 -pix_fmt yuv420p "{output_path}"'
-    )
+    command = [
+        "ffmpeg",
+        "-err_detect", "ignore_err",
+        "-f", "concat",
+        "-safe", "0",
+        "-i", input_txt,
+        "-i", audio_path,
+        "-vf",
+        "scale=1080:1920:force_original_aspect_ratio=decrease,"
+        "pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black",
+        "-c:v", "libx264",
+        "-c:a", "aac",
+        "-shortest",
+        "-r", "30",
+        "-pix_fmt", "yuv420p",
+        output_path
+    ]
 
-    print(f"[REEL] Running FFmpeg command for {folder}...")
-    subprocess.run(command, shell=True, check=True)
-    print(f"[REEL] ✅ Reel created successfully: {output_path}")
+    print("[REEL] Running FFmpeg...")
+    subprocess.run(command, check=True)
+    print(f"[REEL] ✅ Created: {output_path}")
 
 
+# -----------------------------
+# QUEUE LOOP
+# -----------------------------
 if __name__ == "__main__":
+
     while True:
-        print("\n[QUEUE] Checking for new folders...")
+        print("\n[QUEUE] Checking folders...")
+
         base_dir = os.path.dirname(os.path.abspath(__file__))
         done_path = os.path.join(base_dir, "done.txt")
         uploads_path = os.path.join(base_dir, "user_uploads")
 
-        # Create done.txt if missing
         if not os.path.exists(done_path):
             open(done_path, "a").close()
 
         with open(done_path, "r") as f:
-            done_folders = [line.strip() for line in f if line.strip()]
+            done_folders = [x.strip() for x in f if x.strip()]
 
-        folders = os.listdir(uploads_path)
+        for folder in os.listdir(uploads_path):
 
-        for folder in folders:
-            if folder not in done_folders:
-                print(f"[QUEUE] Processing folder: {folder}")
-                try:
-                    text_to_audio(folder)
-                    create_reel(folder)
-                    with open(done_path, "a") as f:
-                        f.write(folder + "\n")
-                except Exception as e:
-                    print(f"[ERROR] Failed to process {folder}: {e}")
+            if folder in done_folders:
+                continue
+
+            print(f"[QUEUE] Processing {folder}")
+
+            try:
+                ok = text_to_audio(folder)
+                if not ok:
+                    continue
+
+                normalize_images(folder)   # ⭐ NEW FIX
+                create_reel(folder)
+
+                with open(done_path, "a") as f:
+                    f.write(folder + "\n")
+
+            except Exception as e:
+                print(f"[ERROR] {folder}: {e}")
 
         time.sleep(4)
