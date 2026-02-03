@@ -1,7 +1,13 @@
 import os
 from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+API_KEY = os.getenv("OPENAI_API_KEY")
+
+if not API_KEY:
+    raise RuntimeError("OPENAI_API_KEY not set")
+
+client = OpenAI(api_key=API_KEY)
+
 
 def text_to_speech_file(text: str, folder: str) -> str:
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -23,3 +29,4 @@ def text_to_speech_file(text: str, folder: str) -> str:
 
     print(f"[TTS] ✅ Audio saved")
     return save_file_path
+
