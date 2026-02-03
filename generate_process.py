@@ -51,40 +51,54 @@ def text_to_audio(folder):
 # REEL CREATION
 # -----------------------------
 def create_reel(folder):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    input_txt = os.path.join(base_dir, "user_uploads", folder, "input.txt")
-    audio_path = os.path.join(base_dir, "user_uploads", folder, "audio.mp3")
-    output_path = os.path.join(base_dir, "static", "reels", f"{folder}.mp4")
+    import os, subprocess
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    base = os.path.dirname(os.path.abspath(__file__))
+    folder_path = os.path.join(base, "user_uploads", folder)
+    audio = os.path.join(folder_path, "audio.mp3")
+    output = os.path.join(base, "static", "reels", f"{folder}.mp4")
 
-    if not os.path.exists(audio_path):
-        print("[ERROR] audio.mp3 missing — skip reel")
-        return
+    # ---- collect images ----
+    imgs = sorted([
+        f for f in os.listdir(folder_path)
+        if f.lower().endswith((".jpg",".jpeg",".png"))
+    ])
 
-    command = [
+    if not imgs:
+        raise RuntimeError("No images found")
+
+    # ---- rename sequential ----
+    for i, name in enumerate(imgs):
+        src = os.path.join(folder_path, name)
+        dst = os.path.join(folder_path, f"frame_{i:03d}.jpg")
+        if src != dst:
+            os.rename(src, dst)
+
+    # ---- ffmpeg slideshow ----
+    cmd = [
         "ffmpeg",
-        "-err_detect", "ignore_err",
-        "-f", "concat",
-        "-safe", "0",
-        "-i", input_txt,
-        "-i", audio_path,
+        "-y",
+        "-framerate","1",
+        "-i", os.path.join(folder_path,"frame_%03d.jpg"),
+        "-i", audio,
         "-vf",
         "scale=1080:1920:force_original_aspect_ratio=decrease,"
-        "pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black",
-        "-c:v", "libx264",
-        "-c:a", "aac",
+        "pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,format=yuv420p",
+        "-c:v","libx264",
+        "-c:a","aac",
         "-shortest",
-        "-r", "30",
-        "-pix_fmt", "yuv420p",
-        output_path
+        "-r","30",
+        "-movflags","+faststart",
+        output
     ]
 
-    print("[REEL] Running FFmpeg...")
-    subprocess.run(command, check=True)
-    print(f"[REEL] ✅ Created: {output_path}")
+    result = subprocess.run(cmd, capture_output=True, text=True)
 
+    print("FFMPEG STDERR:\n", result.stderr)
+
+    if result.returncode != 0:
+        raise RuntimeError("FFmpeg failed")
 
 # -----------------------------
 # QUEUE LOOP
@@ -126,3 +140,4 @@ if __name__ == "__main__":
                 print(f"[ERROR] {folder}: {e}")
 
         time.sleep(4)
+
