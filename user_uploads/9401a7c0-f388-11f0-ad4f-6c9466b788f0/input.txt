@@ -1,4 +1,0 @@
-file 'StockCake-Joyful_party_celebration_1763827633.jpg'
-duration 1
-file 'WIN_20220506_02_16_42_Pro.jpg'
-duration 1

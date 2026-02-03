@@ -1,6 +1,0 @@
-file 'WIN_20220506_02_16_55_Pro.jpg'
-duration 1
-file 'WIN_20220506_02_16_42_Pro.jpg'
-duration 1
-file 'WIN_20211207_19_38_48_Pro.jpg'
-duration 1
