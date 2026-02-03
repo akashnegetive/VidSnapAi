@@ -6,123 +6,136 @@ from text_to_audio import text_to_speech_file
 
 
 # -----------------------------
-# IMAGE NORMALIZATION FIX
+# IMAGE NORMALIZATION
 # -----------------------------
 def normalize_images(folder):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    path = os.path.join(base_dir, "user_uploads", folder)
+    base = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(base, "user_uploads", folder)
 
     for name in os.listdir(path):
-        if name.lower().endswith((".jpg", ".jpeg", ".png")):
+        if name.lower().endswith((".jpg",".jpeg",".png")):
             full = os.path.join(path, name)
             try:
-                img = Image.open(full).convert("RGB")
-                img.save(full, "JPEG")
-                print(f"[IMG] normalized {name}")
+                Image.open(full).convert("RGB").save(full, "JPEG")
+                print("[IMG] normalized", name)
             except Exception as e:
-                print(f"[IMG] skip bad image {name}: {e}")
+                print("[IMG] skip", name, e)
 
 
 # -----------------------------
 # TEXT → AUDIO
 # -----------------------------
 def text_to_audio(folder):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    desc_path = os.path.join(base_dir, "user_uploads", folder, "desc.txt")
 
-    print(f"[PROCESS] Reading description from: {desc_path}")
+    base = os.path.dirname(os.path.abspath(__file__))
+    desc = os.path.join(base,"user_uploads",folder,"desc.txt")
 
-    if not os.path.exists(desc_path):
-        print(f"[ERROR] desc.txt not found")
+    if not os.path.exists(desc):
+        print("[TTS] desc missing")
         return False
 
-    with open(desc_path, "r", encoding="utf-8") as f:
-        text = f.read().strip()
-
+    text = open(desc,"r",encoding="utf-8").read().strip()
     if not text:
-        print("[WARNING] Empty desc.txt")
+        print("[TTS] empty text")
         return False
 
     text_to_speech_file(text, folder)
-    return True
+
+    # ⭐ WAIT FOR AUDIO WRITE (race fix)
+    audio = os.path.join(base,"user_uploads",folder,"audio.mp3")
+
+    for _ in range(20):
+        if os.path.exists(audio) and os.path.getsize(audio) > 1000:
+            print("[TTS] audio ready")
+            return True
+        time.sleep(0.3)
+
+    print("[TTS] audio not ready")
+    return False
 
 
 # -----------------------------
 # REEL CREATION
 # -----------------------------
 def create_reel(folder):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
 
-    input_txt = os.path.join(base_dir, "user_uploads", folder, "input.txt")
-    audio_path = os.path.join(base_dir, "user_uploads", folder, "audio.mp3")
-    output_path = os.path.join(base_dir, "static", "reels", f"{folder}.mp4")
+    base = os.path.dirname(os.path.abspath(__file__))
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    input_txt = os.path.join(base,"user_uploads",folder,"input.txt")
+    audio = os.path.join(base,"user_uploads",folder,"audio.mp3")
+    output = os.path.join(base,"static","reels",f"{folder}.mp4")
 
-    if not os.path.exists(audio_path):
-        print("[ERROR] audio.mp3 missing — skip reel")
+    os.makedirs(os.path.dirname(output), exist_ok=True)
+
+    if not os.path.exists(audio):
+        print("[REEL] audio missing")
         return
 
-    command = [
+    cmd = [
         "ffmpeg",
-        "-err_detect", "ignore_err",
-        "-f", "concat",
-        "-safe", "0",
+        "-y",
+        "-err_detect","ignore_err",
+        "-f","concat","-safe","0",
         "-i", input_txt,
-        "-i", audio_path,
+        "-i", audio,
         "-vf",
         "scale=1080:1920:force_original_aspect_ratio=decrease,"
-        "pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black",
-        "-c:v", "libx264",
-        "-c:a", "aac",
+        "pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,"
+        "format=yuv420p",
+        "-c:v","libx264",
+        "-c:a","aac",
         "-shortest",
-        "-r", "30",
-        "-pix_fmt", "yuv420p",
-        output_path
+        "-r","30",
+        output
     ]
 
-    print("[REEL] Running FFmpeg...")
-    subprocess.run(command, check=True)
-    print(f"[REEL] ✅ Created: {output_path}")
+    print("[REEL] ffmpeg start")
+
+    r = subprocess.run(cmd, capture_output=True, text=True)
+
+    print("[FFMPEG STDERR]\n", r.stderr)
+
+    if r.returncode != 0:
+        print("[REEL] ffmpeg failed")
+        return
+
+    print("[REEL] created", output)
 
 
 # -----------------------------
-# QUEUE LOOP
+# WORKER LOOP (THREAD MODE)
 # -----------------------------
-if __name__ == "__main__":
+def run_worker_loop():
 
     while True:
-        print("\n[QUEUE] Checking folders...")
 
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        done_path = os.path.join(base_dir, "done.txt")
-        uploads_path = os.path.join(base_dir, "user_uploads")
+        base = os.path.dirname(os.path.abspath(__file__))
+        done_file = os.path.join(base,"done.txt")
+        uploads = os.path.join(base,"user_uploads")
 
-        if not os.path.exists(done_path):
-            open(done_path, "a").close()
+        if not os.path.exists(done_file):
+            open(done_file,"a").close()
 
-        with open(done_path, "r") as f:
-            done_folders = [x.strip() for x in f if x.strip()]
+        done = set(open(done_file).read().split())
 
-        for folder in os.listdir(uploads_path):
+        for folder in os.listdir(uploads):
 
-            if folder in done_folders:
+            if folder in done:
                 continue
 
-            print(f"[QUEUE] Processing {folder}")
+            print("[QUEUE]", folder)
 
             try:
-                ok = text_to_audio(folder)
-                if not ok:
+                if not text_to_audio(folder):
                     continue
 
-                normalize_images(folder)   # ⭐ NEW FIX
+                normalize_images(folder)
                 create_reel(folder)
 
-                with open(done_path, "a") as f:
-                    f.write(folder + "\n")
+                with open(done_file,"a") as f:
+                    f.write(folder+"\n")
 
             except Exception as e:
-                print(f"[ERROR] {folder}: {e}")
+                print("[WORKER ERROR]", e)
 
         time.sleep(4)
