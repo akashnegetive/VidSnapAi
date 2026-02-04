@@ -52,6 +52,10 @@ def create():
 
         upload_path = os.path.join(app.config['UPLOAD_FOLDER'], rec_id)
         os.makedirs(upload_path, exist_ok=True)
+        print("[CREATE] upload_path =", upload_path)
+        print("[CREATE] exists =", os.path.exists(upload_path))
+        print("[CREATE] parent list =", os.listdir(os.path.dirname(upload_path)))
+
 
         input_files = []
 
@@ -99,6 +103,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 9000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
