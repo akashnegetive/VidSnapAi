@@ -29,6 +29,12 @@ def text_to_audio(folder):
 
     base = os.path.dirname(os.path.abspath(__file__))
     desc = os.path.join(base,"user_uploads",folder,"desc.txt")
+    audio = os.path.join(base,"user_uploads",folder,"audio.mp3")
+
+    # ✅ skip if audio already exists
+    if os.path.exists(audio) and os.path.getsize(audio) > 1000:
+        print("[TTS] audio already exists — skip")
+        return True
 
     if not os.path.exists(desc):
         print("[TTS] desc missing")
@@ -143,6 +149,7 @@ def run_worker_loop():
                 print("[WORKER ERROR]", e)
 
         time.sleep(4)
+
 
 
 
