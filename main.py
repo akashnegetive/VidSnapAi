@@ -4,7 +4,8 @@ from werkzeug.utils import secure_filename
 import os
 from PIL import Image
 
-UPLOAD_FOLDER = "user_uploads"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "user_uploads")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 
 app = Flask(__name__)
@@ -93,6 +94,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 9000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
