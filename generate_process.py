@@ -120,11 +120,6 @@ def run_worker_loop():
                 if folder.startswith("."):
                     continue
 
-                folders = [f.name for f in os.scandir(UPLOADS_DIR)]
-
-                if not os.path.isdir(folder_path):
-                    continue
-
                 if folder in done:
                     continue
 
@@ -144,5 +139,6 @@ def run_worker_loop():
             print("[WORKER LOOP ERROR]", e)
 
         time.sleep(5)
+
 
 
