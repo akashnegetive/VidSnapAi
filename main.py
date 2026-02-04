@@ -113,13 +113,15 @@ def gallery():
 
 # -------------------------
 if __name__ == "__main__":
-    import os, threading
-    from generate_process import run_worker_loop
+    import threading
+    from generate import run_worker_loop   # ← match filename
 
+    print("=== STARTING BACKGROUND WORKER ===")
     threading.Thread(target=run_worker_loop, daemon=True).start()
 
     port = int(os.getenv("PORT", 9000))
     app.run(host="0.0.0.0", port=port)
+
 
 # def start_worker_once():
 #     import threading
@@ -131,6 +133,7 @@ if __name__ == "__main__":
 #         threading.Thread(target=run_worker_loop, daemon=True).start()
 
 # start_worker_once()
+
 
 
 
