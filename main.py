@@ -10,6 +10,9 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "user_uploads")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 
+print("UPLOAD_FOLDER =", UPLOAD_FOLDER)
+
+
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
@@ -58,6 +61,9 @@ def create():
 
         upload_path = os.path.join(app.config['UPLOAD_FOLDER'], rec_id)
         os.makedirs(upload_path, exist_ok=True)
+        
+        print("[CREATE] upload_path exists:", os.path.exists(upload_path))
+        print("[CREATE] dir content:", os.listdir(UPLOAD_FOLDER))
 
         input_files = []
 
@@ -111,13 +117,18 @@ def gallery():
 #     port = int(os.getenv("PORT", 9000))
 #     app.run(host="0.0.0.0", port=port)
 
-import threading
-from generate_process import run_worker_loop
+def start_worker_once():
+    import threading
+    from generate_process import run_worker_loop
 
-if os.environ.get("WORKER_STARTED") != "1":
-    os.environ["WORKER_STARTED"] = "1"
-    print("=== STARTING BACKGROUND WORKER ===")
-    threading.Thread(target=run_worker_loop, daemon=True).start()
+    if not hasattr(start_worker_once, "started"):
+        start_worker_once.started = True
+        print("=== STARTING BACKGROUND WORKER ===")
+        threading.Thread(target=run_worker_loop, daemon=True).start()
+
+start_worker_once()
+
+
 
 
 
