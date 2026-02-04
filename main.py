@@ -3,7 +3,7 @@ print("=== MAIN.PY VERSION 7 ===")
 from flask import Flask, render_template, request
 import uuid
 from werkzeug.utils import secure_filename
-import os
+import sys, os
 from PIL import Image
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -75,7 +75,7 @@ def create():
                 input_files.append(filename)
 
         print("[CREATE] saved files:", input_files)
-        import sys, os
+        
         sys.stdout.flush()
         os.sync()
 
@@ -131,6 +131,7 @@ def start_worker_once():
         threading.Thread(target=run_worker_loop, daemon=True).start()
 
 start_worker_once()
+
 
 
 
