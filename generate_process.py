@@ -4,22 +4,23 @@ import subprocess
 from PIL import Image
 from text_to_audio import text_to_speech_file
 
+Image.MAX_IMAGE_PIXELS = 20000000
 
 # -----------------------------
 # IMAGE NORMALIZATION
 # -----------------------------
-def normalize_images(folder):
-    base = os.path.dirname(os.path.abspath(__file__))
-    path = os.path.join(base, "user_uploads", folder)
+# def normalize_images(folder):
+#     base = os.path.dirname(os.path.abspath(__file__))
+#     path = os.path.join(base, "user_uploads", folder)
 
-    for name in os.listdir(path):
-        if name.lower().endswith((".jpg",".jpeg",".png")):
-            full = os.path.join(path, name)
-            try:
-                Image.open(full).convert("RGB").save(full, "JPEG")
-                print("[IMG] normalized", name)
-            except Exception as e:
-                print("[IMG] skip", name, e)
+#     for name in os.listdir(path):
+#         if name.lower().endswith((".jpg",".jpeg",".png")):
+#             full = os.path.join(path, name)
+#             try:
+#                 Image.open(full).convert("RGB").save(full, "JPEG")
+#                 print("[IMG] normalized", name)
+#             except Exception as e:
+#                 print("[IMG] skip", name, e)
 
 
 # -----------------------------
@@ -81,12 +82,13 @@ def create_reel(folder):
         "ffmpeg",
         "-y",
         "-err_detect","ignore_err",
+        "-threads 1",
         "-f","concat","-safe","0",
         "-i", input_txt,
         "-i", audio,
-        "-vf",
-        "scale=1080:1920:force_original_aspect_ratio=decrease,"
-        "pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,"
+       "-vf",
+        "scale=720:1280:force_original_aspect_ratio=decrease,"
+        "pad=720:1280:(ow-iw)/2:(oh-ih)/2:black,"
         "format=yuv420p",
         "-c:v","libx264",
         "-c:a","aac",
@@ -139,7 +141,7 @@ def run_worker_loop():
                 if not text_to_audio(folder):
                     continue
 
-                normalize_images(folder)
+                #normalize_images(folder)
                 create_reel(folder)
 
                 with open(done_file,"a") as f:
@@ -149,6 +151,7 @@ def run_worker_loop():
                 print("[WORKER ERROR]", e)
 
         time.sleep(4)
+
 
 
 
