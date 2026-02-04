@@ -134,9 +134,8 @@ def run_worker_loop():
 
         for folder in os.listdir(uploads):
 
-            folder_path = os.path.join(uploads, folder)
-            if not os.path.isdir(folder_path):
-                 continue
+            if folder.startswith("."):
+                continue
             if folder in done:
                 continue
 
@@ -154,6 +153,7 @@ def run_worker_loop():
                 print("[WORKER ERROR]", e)
 
         time.sleep(4)
+
 
 
 
