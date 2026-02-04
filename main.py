@@ -43,21 +43,20 @@ def home():
 # -------------------------
 @app.route("/create", methods=["GET","POST"])
 def create():
-    myid = uuid.uuid1()
-    created = False   # ⭐ flag
+    myid = str(uuid.uuid4())
+    created = False
+
     print("[CREATE] method =", request.method)
+
     if request.method == "POST":
-        
+
         rec_id = str(uuid.uuid4())
         print("[CREATE] NEW JOB:", rec_id)
+
         desc = request.form.get("text")
 
         upload_path = os.path.join(app.config['UPLOAD_FOLDER'], rec_id)
         os.makedirs(upload_path, exist_ok=True)
-        print("[CREATE] upload_path =", upload_path)
-        print("[CREATE] exists =", os.path.exists(upload_path))
-        print("[CREATE] parent list =", os.listdir(os.path.dirname(upload_path)))
-
 
         input_files = []
 
@@ -68,6 +67,8 @@ def create():
                 file.save(os.path.join(upload_path, filename))
                 input_files.append(filename)
 
+        print("[CREATE] saved files:", input_files)
+
         with open(os.path.join(upload_path, "desc.txt"), "w", encoding="utf-8") as f:
             f.write(desc or "")
 
@@ -76,9 +77,10 @@ def create():
                 f.write(f"file '{os.path.abspath(os.path.join(upload_path, fl))}'\n")
                 f.write("duration 1\n")
 
-        created = True   # ⭐ mark success
+        created = True
 
     return render_template("create.html", myid=myid, created=created)
+
 
 
 
@@ -105,6 +107,7 @@ if __name__ == "__main__":
 
     port = int(os.getenv("PORT", 9000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
