@@ -75,6 +75,10 @@ def create():
                 input_files.append(filename)
 
         print("[CREATE] saved files:", input_files)
+        import sys, os
+        sys.stdout.flush()
+        os.sync()
+
 
         with open(os.path.join(upload_path, "desc.txt"), "w", encoding="utf-8") as f:
             f.write(desc or "")
@@ -127,6 +131,7 @@ def start_worker_once():
         threading.Thread(target=run_worker_loop, daemon=True).start()
 
 start_worker_once()
+
 
 
 
