@@ -82,7 +82,6 @@ def create_reel(folder):
         "ffmpeg",
         "-y",
         "-err_detect","ignore_err",
-        "-threads 1",
         "-f","concat","-safe","0",
         "-i", input_txt,
         "-i", audio,
@@ -151,6 +150,7 @@ def run_worker_loop():
                 print("[WORKER ERROR]", e)
 
         time.sleep(4)
+
 
 
 
