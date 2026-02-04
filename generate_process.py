@@ -124,9 +124,7 @@ def run_worker_loop():
             open(done_file,"a").close()
 
         done = set(open(done_file).read().split())
-        print("UPLOAD PATH:", uploads)
-        print("UPLOAD CONTENT:", os.listdir(uploads))
-
+        
 
         for folder in os.listdir(uploads):
 
@@ -135,9 +133,6 @@ def run_worker_loop():
                  continue
             if folder in done:
                 continue
-
-            print("[QUEUE]", folder)
-            print("FOLDER FILES:", os.listdir(os.path.join(uploads, folder)))
 
             try:
                 if not text_to_audio(folder):
@@ -153,6 +148,7 @@ def run_worker_loop():
                 print("[WORKER ERROR]", e)
 
         time.sleep(4)
+
 
 
 
