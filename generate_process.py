@@ -76,7 +76,7 @@ def text_to_audio(folder):
 # -----------------------------
 def create_reel(folder):
 
-    print("[REEL] start for folder:", folder)
+    print("\n[REEL] start for folder:", folder)
 
     input_txt = os.path.join(UPLOADS_DIR, folder, "input.txt")
     audio = os.path.join(UPLOADS_DIR, folder, "audio.mp3")
@@ -84,14 +84,15 @@ def create_reel(folder):
 
     print("[REEL] input_txt exists:", os.path.exists(input_txt))
     print("[REEL] audio exists:", os.path.exists(audio))
+    print("[REEL] output path:", output)
 
     if not os.path.exists(input_txt):
-        print("[REEL] input.txt missing")
-        return
+        print("[REEL] ❌ input.txt missing")
+        return False
 
     if not os.path.exists(audio):
-        print("[REEL] audio missing")
-        return
+        print("[REEL] ❌ audio missing")
+        return False
 
     os.makedirs(os.path.dirname(output), exist_ok=True)
 
@@ -115,14 +116,27 @@ def create_reel(folder):
     ]
 
     print("[REEL] running ffmpeg...")
+    print("[REEL CMD]", " ".join(cmd))
 
-    r = subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True)
 
-    if r.returncode != 0:
-        print("[FFMPEG ERROR]", r.stderr)
-        return
+        print("[REEL] return code:", r.returncode)
 
-    print("[REEL] created:", output)
+        if r.stderr:
+            print("[FFMPEG STDERR]", r.stderr)
+
+        if r.returncode != 0:
+            print("[REEL] ❌ ffmpeg failed")
+            return False
+
+    except Exception as e:
+        print("[REEL EXCEPTION]", e)
+        return False
+
+    print("[REEL] ✅ video created:", output)
+    return True
+
 
 
 
@@ -173,10 +187,9 @@ def run_worker_loop():
                     print(">>> TTS failed — will retry later")
                     continue
 
-                create_reel(folder)
-
-                with open(DONE_FILE, "a") as f:
-                    f.write(folder + "\n")
+                if create_reel(folder):
+                    with open(DONE_FILE, "a") as f:
+                        f.write(folder + "\n")
 
                 print(">>> JOB COMPLETED:", folder)
 
@@ -184,6 +197,7 @@ def run_worker_loop():
             print("[WORKER LOOP ERROR]", e)
 
         time.sleep(5)
+
 
 
 
