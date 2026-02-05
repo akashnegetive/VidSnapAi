@@ -112,26 +112,27 @@ def gallery():
 
 
 # -------------------------
-if __name__ == "__main__":
-    # import threading
-    # from generate_process import run_worker_loop   
+# if __name__ == "__main__":
+#     # import threading
+#     # from generate_process import run_worker_loop   
 
-    # print("=== STARTING BACKGROUND WORKER ===")
-    # threading.Thread(target=run_worker_loop, daemon=True).start()
+#     # print("=== STARTING BACKGROUND WORKER ===")
+#     # threading.Thread(target=run_worker_loop, daemon=True).start()
 
-    port = int(os.getenv("PORT", 9000))
-    app.run(host="0.0.0.0", port=port)
+#     port = int(os.getenv("PORT", 9000))
+#     app.run(host="0.0.0.0", port=port)
 
 
 
-# import threading
-# from generate_process import run_worker_loop
+import threading
+from generate_process import run_worker_loop
 
-# # start worker once per process
-# if os.environ.get("WORKER_STARTED") != "1":
-#     os.environ["WORKER_STARTED"] = "1"
-#     print("=== STARTING BACKGROUND WORKER ===")
-#     threading.Thread(target=run_worker_loop, daemon=True).start()
+# start worker once per process
+if os.environ.get("WORKER_STARTED") != "1":
+    os.environ["WORKER_STARTED"] = "1"
+    print("=== STARTING BACKGROUND WORKER ===")
+    threading.Thread(target=run_worker_loop, daemon=True).start()
+
 
 
 
