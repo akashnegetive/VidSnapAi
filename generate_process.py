@@ -193,7 +193,7 @@ def run_worker_loop():
                 with open(DONE_FILE, "a") as f:
                     f.write(folder + "\n")
 
-                create_reel(folder):
+                create_reel(folder)
 
                 print(">>> JOB COMPLETED:", folder)
 
@@ -201,6 +201,7 @@ def run_worker_loop():
             print("[WORKER LOOP ERROR]", e)
 
         time.sleep(5)
+
 
 
 
